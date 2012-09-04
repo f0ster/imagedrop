@@ -1,0 +1,7 @@
+D:\code\visual_ink\fileDrop\fileDrop\bin\fileDrop.dll
+D:\code\visual_ink\fileDrop\fileDrop\bin\fileDrop.pdb
+D:\code\visual_ink\fileDrop\fileDrop\bin\EntityFramework.dll
+D:\code\visual_ink\fileDrop\fileDrop\bin\EntityFramework.xml
+D:\code\visual_ink\fileDrop\fileDrop\obj\Debug\ResolveAssemblyReference.cache
+D:\code\visual_ink\fileDrop\fileDrop\obj\Debug\fileDrop.dll
+D:\code\visual_ink\fileDrop\fileDrop\obj\Debug\fileDrop.pdb

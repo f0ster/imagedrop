@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="fileDropModelStoreContainer" CdmEntityContainer="fileDropEntities">
+    <EntitySetMapping Name="DroppedFiles">
+      <EntityTypeMapping TypeName="IsTypeOf(fileDropModel.DroppedFile)">
+        <MappingFragment StoreEntitySet="DroppedFiles">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="DateCreated" ColumnName="DateCreated" />
+          <ScalarProperty Name="FName" ColumnName="FName" />
+          <ScalarProperty Name="Caption" ColumnName="Caption" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping>
