@@ -140,46 +140,55 @@
 
         $.each(dataArray, function (index, file) {
 
-            $.post('/home/upload', dataArray[index], function (data) {
+            //$.post('/home/upload', dataArray[index], function (data) {
 
-                var fileName = dataArray[index].name;
-                ++x;
+            $.ajax( {
+                type: 'POST',
+                url: '/home/upload',
+                data: dataArray[index],
+                dataType: 'multipart/form-data',
+                success: function (data) {
 
-                // Change the bar to represent how much has loaded
-                $('#loading-bar .loading-color').css({ 'width': totalPercent * (x) + '%' });
+                    var fileName = dataArray[index].name;
+                    ++x;
 
-                if (totalPercent * (x) == 100) {
-                    // Show the upload is complete
-                    $('#loading-content').html('Uploading Complete!');
+                    // Change the bar to represent how much has loaded
+                    $('#loading-bar .loading-color').css({ 'width': totalPercent * (x) + '%' });
 
-                    // Reset everything when the loading is completed
-                    setTimeout(restartFiles, 500);
+                    if (totalPercent * (x) == 100) {
+                        // Show the upload is complete
+                        $('#loading-content').html('Uploading Complete!');
 
-                } else if (totalPercent * (x) < 100) {
+                        // Reset everything when the loading is completed
+                        setTimeout(restartFiles, 500);
 
-                    // Show that the files are uploading
-                    $('#loading-content').html('Uploading ' + fileName);
+                    } else if (totalPercent * (x) < 100) {
 
-                }
+                        // Show that the files are uploading
+                        $('#loading-content').html('Uploading ' + fileName);
 
-                // Show a message showing the file URL.
-                var dataSplit = data.split(':');
-                if (dataSplit[1] == 'uploaded successfully') {
-                    var realData = '<li><a href="images/' + dataSplit[0] + '">' + fileName + '</a> ' + dataSplit[1] + '</li>';
-
-                    $('#uploaded-files').append('<li><a href="images/' + dataSplit[0] + '">' + fileName + '</a> ' + dataSplit[1] + '</li>');
-
-                    // Add things to local storage 
-                    if (window.localStorage.length == 0) {
-                        y = 0;
-                    } else {
-                        y = window.localStorage.length;
                     }
 
-                    window.localStorage.setItem(y, realData);
+                    // Show a message showing the file URL.
+                    var dataSplit = data.split(':');
+                    if (dataSplit[1] == 'uploaded successfully') {
+                        var realData = '<li><a href="images/' + dataSplit[0] + '">' + fileName + '</a> ' + dataSplit[1] + '</li>';
 
-                } else {
-                    $('#uploaded-files').append('<li><a href="images/' + data + '. File Name: ' + dataArray[index].name + '</li>');
+                        $('#uploaded-files').append('<li><a href="images/' + dataSplit[0] + '">' + fileName + '</a> ' + dataSplit[1] + '</li>');
+
+                        // Add things to local storage 
+                        if (window.localStorage.length == 0) {
+                            y = 0;
+                        } else {
+                            y = window.localStorage.length;
+                        }
+
+                        window.localStorage.setItem(y, realData);
+
+                    } else {
+                        $('#uploaded-files').append('<li><a href="images/' + data + '. File Name: ' + dataArray[index].name + '</li>');
+                    }
+
                 }
 
             });
