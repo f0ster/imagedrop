@@ -22,18 +22,6 @@ namespace fileDrop
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
-                "Upload",
-                "{controller}/{action}",
-                new { controller = "Home", action = "Upload" }
-            );
-
-            routes.MapRoute(
-                "UpdateCaption",
-                "{controller}/{action}",
-                new { controller = "Home", action = "UpdateCaption" }
-            );
-
-            routes.MapRoute(
                 "Default", // Route name
                 "{controller}/{action}/{id}", // URL with parameters
                 new { controller = "Home", action = "Index", id = UrlParameter.Optional } // Parameter defaults
