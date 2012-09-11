@@ -14,10 +14,12 @@ namespace fileDrop.Controllers
     {
 
         private fileDropEntities _fileDropEntities;
+        private string _imageDirectoryPrefix;
 
         public HomeController()
         {
             _fileDropEntities = new fileDropEntities();
+            _imageDirectoryPrefix = System.Configuration.ConfigurationManager.AppSettings["imageDirectoryPrefix"];
         }
 
         public ActionResult Index()
@@ -31,42 +33,44 @@ namespace fileDrop.Controllers
 
         }
 
-        //using custom filter to check filetype on posted file
-        [AcceptVerbs(HttpVerbs.Post), HttpPostedFileType(AllowedFileTypeExtensions = ".jpg|.gif|.png|.jpeg")]
-        public ActionResult Upload(HttpPostedFileBase file)
+        [AcceptVerbs(HttpVerbs.Post)]
+        public ActionResult Upload()
         {
             ContentResult c = new ContentResult();
-
-            try
+            if (Request.Form["value"] != null && Request.Form["name"] != null)
             {
-                if (file.ContentLength > 0)
+                try
                 {
-                    string fileName = Path.GetFileName(file.FileName);
-                    string path = Path.Combine(Server.MapPath("/"), fileName);
-                    file.SaveAs(path);
+                    //TODO: change file name to (G|U)UID perhaps?
+                    string b64_data = (Request.Form["value"].Split(',')[1]).Replace(' ', '+');
+                    string baseDir = Path.Combine(Server.MapPath("/"), this._imageDirectoryPrefix);
+                    string fileName = Path.GetFileName(Request.Form["name"]);
+                    string path = baseDir + fileName;
+                    //check if dir exists, if not: make it
+                    if (!System.IO.File.Exists(baseDir))
+                        System.IO.Directory.CreateDirectory(baseDir);
+                    System.IO.File.WriteAllBytes(path, Convert.FromBase64String(b64_data));
                     // now create model
                     DroppedFile d = new DroppedFile()
                     {
-                        FName = fileName
+                        FName = fileName,
+                        DateCreated = DateTime.Now
                     };
 
                     _fileDropEntities.DroppedFiles.AddObject(d);
                     _fileDropEntities.SaveChanges();
 
-                    c.Content = fileName + ":uploaded successfully";
+                    c.Content = fileName + ":uploaded successfully:" + d.id;
                 }
-                else
-                    c.Content = "Error, file content empty";
-
-                return c;
-
+                catch (Exception e)
+                {
+                    c.Content = "-1";
+                }
             }
-            catch (Exception e)
-            {
-                c.Content = e.Message;
-                return c;
-            }
+            else
+                c.Content = "-1";
 
+            return c;
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
@@ -79,6 +83,21 @@ namespace fileDrop.Controllers
             {
                 d.Caption = caption;
                 _fileDropEntities.ApplyCurrentValues(d.EntityKey.EntitySetName, d);
+                _fileDropEntities.SaveChanges();
+                return new HttpStatusCodeResult(200);
+            }
+            else
+                return new HttpStatusCodeResult(500);
+
+        }
+        [AcceptVerbs(HttpVerbs.Post)]
+        public ActionResult Delete(int id)
+        {
+            DroppedFile d = _fileDropEntities.DroppedFiles.Where(file => file.id == id).FirstOrDefault();
+
+            if (d != null)
+            {
+                _fileDropEntities.DeleteObject(d);
                 _fileDropEntities.SaveChanges();
                 return new HttpStatusCodeResult(200);
             }
