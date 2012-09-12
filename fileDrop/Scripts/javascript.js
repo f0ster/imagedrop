@@ -4,11 +4,6 @@
     // Drop the item in the drop box.
     jQuery.event.props.push('dataTransfer');
 
-    var z = -40;
-    // The number of images to display
-    var maxFiles = 5;
-    var errMessage = 0;
-
     // Get all of the data URIs and put them in an array
     var dataArray = [];
 
