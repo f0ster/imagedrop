@@ -31,15 +31,6 @@
                 $('#drop-files').html('Sorry, images only');
                 return false;
             }
-
-            // Check length of the total image elements
-
-            if ($('#dropped-files > .image').length < maxFiles) {
-                // Change position of the upload button so it is centered
-                var imageWidths = ((220 + (40 * $('#dropped-files > .image').length)) / 2) - 20;
-                $('#upload-button').css({ 'left': imageWidths + 'px', 'display': 'block' });
-            }
-
             // Start a new instance of FileReader
             var fileReader = new FileReader();
 
@@ -49,34 +40,14 @@
                 return function (e) {
 
                     // Push the data URI into an array
-                    dataArray.push({ name: file.name, value: this.result });
+                    dataArray.push({ name: file.name, value: this.result, uploaded: false });
 
-                    // Move each image 40 more pixels across
-                    z = z + 40;
-                    var image = this.result;
-
-
-                    // Just some grammatical adjustments
-                    if (dataArray.length == 1) {
-                        $('#upload-button span').html("1 file to be uploaded");
-                    } else {
-                        $('#upload-button span').html(dataArray.length + " files to be uploaded");
-                    }
+                    uploadFiles();
                     // Place extra files in a list
-                    if ($('#dropped-files > .image').length < maxFiles) {
-                        // Place the image inside the dropzone
-                        $('#dropped-files').append('<div class="image" style="left: ' + z + 'px; background: url(' + image + '); background-size: cover;"> </div>');
-                    }
-                    else {
+                    //                    if ($('#dropped-files > .image').length < maxFiles) {
+                    //                        uploadFiles();
 
-                        $('#extra-files .number').html('+' + ($('#file-list li').length + 1));
-                        // Show the extra files dialogue
-                        $('#extra-files').show();
-
-                        // Start adding the file name to the file list
-                        $('#extra-files #file-list ul').append('<li>' + file.name + '</li>');
-
-                    }
+                    //                    }
                 };
 
             })(files[index]);
@@ -86,35 +57,12 @@
 
         });
 
+        dataArray.length = 0;
+
 
     });
 
-    function restartFiles() {
-
-        // This is to set the loading bar back to its default state
-        $('#loading-bar .loading-color').css({ 'width': '0%' });
-        $('#loading').css({ 'display': 'none' });
-        $('#loading-content').html(' ');
-        // --------------------------------------------------------
-
-        // We need to remove all the images and li elements as
-        // appropriate. We'll also make the upload button disappear
-
-        $('#upload-button').hide();
-        $('#dropped-files > .image').remove();
-        $('#extra-files #file-list li').remove();
-        $('#extra-files').hide();
-        $('#uploaded-holder').hide();
-
-        // And finally, empty the array/set z to -40
-        dataArray.length = 0;
-        z = -40;
-
-        return false;
-    }
-
-    $('#upload-button .upload').click(function () {
-
+    function uploadFiles() {
         $("#loading").show();
         var totalPercent = 100 / dataArray.length;
         var x = 0;
@@ -123,57 +71,60 @@
         $('#loading-content').html('Uploading ' + dataArray[0].name);
 
         $.each(dataArray, function (index, file) {
+            if (!dataArray[index].uploaded) {
+                //mark as uploaded immediately to avoid race condition, display error if problem uploading
+                dataArray[index].uploaded = true;
+                $.post('/home/upload', dataArray[index], function (data) {
 
-            $.post('/home/upload', dataArray[index], function (data) {
+                    var fileName = dataArray[index].name;
+                    ++x;
 
-                var fileName = dataArray[index].name;
-                ++x;
+                    // Change the bar to represent how much has loaded
+                    $('#loading-bar .loading-color').css({ 'width': totalPercent * (x) + '%' });
 
-                // Change the bar to represent how much has loaded
-                $('#loading-bar .loading-color').css({ 'width': totalPercent * (x) + '%' });
+                    if (totalPercent * (x) == 100) {
+                        // Show the upload is complete
+                        $('#loading-content').html('Uploading Complete!');
 
-                if (totalPercent * (x) == 100) {
-                    // Show the upload is complete
-                    $('#loading-content').html('Uploading Complete!');
+                        // Reset everything when the loading is completed
+                        setTimeout(restartLoadingBar, 500);
 
-                    // Reset everything when the loading is completed
-                    setTimeout(restartFiles, 500);
+                    } else if (totalPercent * (x) < 100) {
 
-                } else if (totalPercent * (x) < 100) {
+                        // Show that the files are uploading
+                        $('#loading-content').html('Uploading ' + fileName);
 
-                    // Show that the files are uploading
-                    $('#loading-content').html('Uploading ' + fileName);
+                    }
 
-                }
-
-                // Show a message showing the file URL.
-                //                    var dataSplit = data.split(':');
-                //                    if (dataSplit[1] == 'uploaded successfully') {
-                //                        var realData = '<li><a href="images/' + dataSplit[0] + '">' + fileName + '</a> ' + dataSplit[1] + '</li>';
-
-                //                        $('#uploaded-files').append('<li><a href="images/' + dataSplit[0] + '">' + fileName + '</a> ' + dataSplit[1] + '</li>');
-
-                //                        // Add things to local storage 
-                //                        if (window.localStorage.length == 0) {
-                //                            y = 0;
-                //                        } else {
-                //                            y = window.localStorage.length;
-                //                        }
-
-                //                        window.localStorage.setItem(y, realData);
-
-                //                    } else {
-                //                        $('#uploaded-files').append('<li><a href="images/' + data + '. File Name: ' + dataArray[index].name + '</li>');
-                //                    }
-                var dataSplit = data.split(':');
-                if (dataSplit[1] == 'uploaded successfully') {
-                    dataArray[index].id = dataSplit[2];
-                }
-            });
+                    var dataSplit = data.split(':');
+                    if (dataSplit[1] == 'uploaded successfully') {
+                        dataArray[index].id = dataSplit[2];
+                        $('.dropped-files').prepend(
+                        '<div class="image" style="background: url(' + dataArray[index].value + '); background-size: cover;" id="image-' + dataSplit[2] + '">' +
+				            '<a href="#" class="delete" id="' + dataSplit[2] + '">delete</a>' +
+                        '</div>'
+                        );
+                        
+                    } else {
+                        $('body').append('<h3>error uploading file ' + dataArray[index].name + '</h3>');
+                    }
+                });
+            }
         });
 
         return false;
-    });
+    }
+
+    function restartLoadingBar() {
+
+        // This is to set the loading bar back to its default state
+        $('#loading-bar .loading-color').css({ 'width': '0%' });
+        $('#loading').css({ 'display': 'none' });
+        $('#loading-content').html(' ');
+        // --------------------------------------------------------
+
+        return false;
+    }
 
     // Just some styling for the drop file container.
     $('#drop-files').bind('dragenter', function () {
@@ -193,15 +144,11 @@
         $('#file-list').hide();
     });
 
-    //$('#dropped-files #upload-button .delete').click(restartFiles);
+    //$('#dropped-files .upload-button .delete').click(restartFiles);
 
-    $('#dropped-files #upload-button .delete').click(function (e) {
+    $('.image .delete').live('click', (function (e) {
         //grab id from image element
-        var image_id = this.attr('id');
-
-        //        $.post('/home/delete', { 'id': image_id } , function (data) {
-        //            if(
-        //        });
+        var image_id = $(this).attr('id');
 
         $.ajax({
             url: '/home/delete',
@@ -213,26 +160,11 @@
                 },
                 200: function (xhr) {
                     //remove image
-                    $('#' + id).remove();
+                    $('#image-' + image_id).remove();
                 }
             }
         });
 
-    });
+    }));
 
-
-    //    // Append the localstorage the the uploaded files section
-    //    if (window.localStorage.length > 0) {
-    //        $('#uploaded-files').show();
-    //        for (var t = 0; t < window.localStorage.length; t++) {
-    //            var key = window.localStorage.key(t);
-    //            var value = window.localStorage[key];
-    //            // Append the list items
-    //            if (value != undefined || value != '') {
-    //                $('#uploaded-files').append(value);
-    //            }
-    //        }
-    //    } else {
-    //        $('#uploaded-files').hide();
-    //    }
 });

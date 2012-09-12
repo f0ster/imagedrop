@@ -29,6 +29,8 @@ namespace fileDrop.Controllers
             if (files.Count > 0)
                 ViewData["files"] = files;
 
+            ViewData["image_path"] = _imageDirectoryPrefix;
+
             return View();
 
         }

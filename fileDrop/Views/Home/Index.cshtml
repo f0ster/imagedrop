@@ -8,7 +8,7 @@
 <script src="/scripts/javascript.js"></script>
 <link rel="stylesheet" type="text/css" href="/Content/style.css" />
 <link rel="stylesheet" type="text/css" href="/Content/pacifico.css" />
-
+@{ List<fileDrop.Models.DroppedFile> files = (List<fileDrop.Models.DroppedFile>)(ViewData["files"]); }
 
 </head>
 <body>
@@ -19,13 +19,20 @@
 	</div>
 	
 	<div id="uploaded-holder">
-		<div id="dropped-files">
-			<div id="upload-button">
-				<a href="#" class="upload">Upload!</a>
-				<a href="#" class="delete">delete</a>
-				<span>0 Files</span>
-			</div>
+	    <div class="dropped-files">
+        @if (files != null && files.Count > 0)
+        {
+            foreach (var f in files)
+            {
+                //iterate through loaded model and build links
+                <div class="image" style="background: url('@(ViewData["image_path"] + f.FName)'); background-size: cover;" id="image-@f.id">
+			        <a href="#" class="delete" id="@f.id">delete</a> +
+                </div>
+            
+            }
+        }
 		</div>
+
 
 	</div>
 	<div id="loading">
@@ -35,11 +42,6 @@
 		<div id="loading-content">Uploading file.jpg</div>
 	</div>
 	
-	<div id="file-name-holder">
-		<ul id="uploaded-files">
-			<h1>Uploaded Files</h1>
-		</ul>
-	</div>
 </div>
 </body>
 </html>
